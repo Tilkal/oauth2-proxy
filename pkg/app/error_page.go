@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
 
@@ -50,4 +51,9 @@ func (e *ErrorPage) Render(rw http.ResponseWriter, status int, redirectURL strin
 		logger.Printf("Error rendering error template: %v", err)
 		http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
+}
+
+func (e *ErrorPage) ProxyErrorHandler(rw http.ResponseWriter, req *http.Request, proxyErr error) {
+	logger.Errorf("Error proxying to upstream server: %v", proxyErr)
+	e.Render(rw, http.StatusBadGateway, "", errors.New("Error proxying to upstream server"))
 }
