@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"html/template"
 	"net/http"
 
@@ -24,7 +23,7 @@ type ErrorPage struct {
 	Version string
 }
 
-func (e *ErrorPage) Render(rw http.ResponseWriter, status int, redirectURL string, appError error) {
+func (e *ErrorPage) Render(rw http.ResponseWriter, status int, redirectURL string, appError string) {
 	rw.WriteHeader(status)
 
 	// We allow unescaped template.HTML since it is user configured options
@@ -39,7 +38,7 @@ func (e *ErrorPage) Render(rw http.ResponseWriter, status int, redirectURL strin
 		Version     string
 	}{
 		Title:       http.StatusText(status),
-		Message:     appError.Error(),
+		Message:     appError,
 		ProxyPrefix: e.ProxyPrefix,
 		StatusCode:  status,
 		Redirect:    redirectURL,
@@ -55,5 +54,5 @@ func (e *ErrorPage) Render(rw http.ResponseWriter, status int, redirectURL strin
 
 func (e *ErrorPage) ProxyErrorHandler(rw http.ResponseWriter, req *http.Request, proxyErr error) {
 	logger.Errorf("Error proxying to upstream server: %v", proxyErr)
-	e.Render(rw, http.StatusBadGateway, "", errors.New("Error proxying to upstream server"))
+	e.Render(rw, http.StatusBadGateway, "", "Error proxying to upstream server")
 }
