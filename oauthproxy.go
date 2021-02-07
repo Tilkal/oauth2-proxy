@@ -128,6 +128,7 @@ func NewOAuthProxy(opts *options.Options, validator func(string) bool) (*OAuthPr
 		ProxyPrefix: opts.ProxyPrefix,
 		Footer:      opts.Templates.Footer,
 		Version:     VERSION,
+		Debug:       opts.Templates.Debug,
 	}
 
 	upstreamProxy, err := upstream.NewProxy(opts.UpstreamServers, opts.GetSignatureData(), errorPage.ProxyErrorHandler)
@@ -523,7 +524,7 @@ func (p *OAuthProxy) RobotsTxt(rw http.ResponseWriter, req *http.Request) {
 }
 
 // ErrorPage writes an error response
-func (p *OAuthProxy) ErrorPage(rw http.ResponseWriter, req *http.Request, code int, appError string) {
+func (p *OAuthProxy) ErrorPage(rw http.ResponseWriter, req *http.Request, code int, appError string, messages ...interface{}) {
 	redirectURL, err := p.getAppRedirect(req)
 	if err != nil {
 		logger.Errorf("Error obtaining redirect: %v", err)
@@ -532,7 +533,7 @@ func (p *OAuthProxy) ErrorPage(rw http.ResponseWriter, req *http.Request, code i
 		redirectURL = "/"
 	}
 
-	p.errorPage.Render(rw, code, redirectURL, appError)
+	p.errorPage.Render(rw, code, redirectURL, appError, messages...)
 }
 
 // IsAllowedRequest is used to check if auth should be skipped for this request
@@ -751,28 +752,28 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	errorString := req.Form.Get("error")
 	if errorString != "" {
 		logger.Errorf("Error while parsing OAuth2 callback: %s", errorString)
-		p.ErrorPage(rw, req, http.StatusForbidden, errorString)
+		p.ErrorPage(rw, req, http.StatusForbidden, errorString, "Login Failed: The upstream identity provider returned an error.")
 		return
 	}
 
 	session, err := p.redeemCode(req)
 	if err != nil {
 		logger.Errorf("Error redeeming code during OAuth2 callback: %v", err)
-		p.ErrorPage(rw, req, http.StatusInternalServerError, "Internal Error")
+		p.ErrorPage(rw, req, http.StatusInternalServerError, err.Error(), "Login Failed: There was a problem with the code returned by the upstream identity provider.")
 		return
 	}
 
 	err = p.enrichSessionState(req.Context(), session)
 	if err != nil {
 		logger.Errorf("Error creating session during OAuth2 callback: %v", err)
-		p.ErrorPage(rw, req, http.StatusInternalServerError, "Internal Error")
+		p.ErrorPage(rw, req, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	state := strings.SplitN(req.Form.Get("state"), ":", 2)
 	if len(state) != 2 {
 		logger.Error("Error while parsing OAuth2 state: invalid length")
-		p.ErrorPage(rw, req, http.StatusInternalServerError, "Invalid State")
+		p.ErrorPage(rw, req, http.StatusInternalServerError, "State paremeter did not have expected length", "Login Failed: Invalid State after login.")
 		return
 	}
 	nonce := state[0]
@@ -780,13 +781,13 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	c, err := req.Cookie(p.CSRFCookieName)
 	if err != nil {
 		logger.PrintAuthf(session.Email, req, logger.AuthFailure, "Invalid authentication via OAuth2: unable to obtain CSRF cookie")
-		p.ErrorPage(rw, req, http.StatusForbidden, err.Error())
+		p.ErrorPage(rw, req, http.StatusForbidden, err.Error(), "Login Failed: Unable to find a valid CSRF token. Please try again.")
 		return
 	}
 	p.ClearCSRFCookie(rw, req)
 	if c.Value != nonce {
 		logger.PrintAuthf(session.Email, req, logger.AuthFailure, "Invalid authentication via OAuth2: CSRF token mismatch, potential attack")
-		p.ErrorPage(rw, req, http.StatusForbidden, "CSRF Failed")
+		p.ErrorPage(rw, req, http.StatusForbidden, "CSRF token mismatch, potential attack", "Login Failed: Unable to find a valid CSRF token. Please try again.")
 		return
 	}
 
@@ -810,7 +811,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 		http.Redirect(rw, req, redirect, http.StatusFound)
 	} else {
 		logger.PrintAuthf(session.Email, req, logger.AuthFailure, "Invalid authentication via OAuth2: unauthorized")
-		p.ErrorPage(rw, req, http.StatusForbidden, "Invalid Account")
+		p.ErrorPage(rw, req, http.StatusForbidden, "Invalid session: unauthorized")
 	}
 }
 
@@ -897,7 +898,7 @@ func (p *OAuthProxy) Proxy(rw http.ResponseWriter, req *http.Request) {
 	default:
 		// unknown error
 		logger.Errorf("Unexpected internal error: %v", err)
-		p.ErrorPage(rw, req, http.StatusInternalServerError, "Internal Error")
+		p.ErrorPage(rw, req, http.StatusInternalServerError, err.Error())
 	}
 }
 
