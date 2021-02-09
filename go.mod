@@ -31,3 +31,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.4.1
 )
+
+replace github.com/coreos/go-oidc v2.2.1+incompatible => github.com/Tilkal/go-oidc v2.2.2-0.20210209134908-d0e05fefb0a9+incompatible
