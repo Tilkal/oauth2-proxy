@@ -11,6 +11,8 @@ github.com/FZambia/sentinel v1.0.0/go.mod h1:ytL1Am/RLlAoAXG6Kj5LNuw/TRRQrv2rt2F
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/Tilkal/go-oidc v2.2.2-0.20210209134908-d0e05fefb0a9+incompatible h1:75uSrMsZdhXuYFviYSxR3S8G5X52u+IZZdp11Fqv6A0=
 github.com/Tilkal/go-oidc v2.2.2-0.20210209134908-d0e05fefb0a9+incompatible/go.mod h1:8awZKTopErO0KKMqs3niAfFjd0N2Bih7oRv1bK7DG+0=
+github.com/Tilkal/go-oidc v2.2.2-0.20210210085642-b10cb84756e2+incompatible h1:CqtkbYkqriYlN/wyza9fKvqVz2nbOsJ5QlYbruNTE/8=
+github.com/Tilkal/go-oidc v2.2.2-0.20210210085642-b10cb84756e2+incompatible/go.mod h1:8awZKTopErO0KKMqs3niAfFjd0N2Bih7oRv1bK7DG+0=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 h1:45bxf7AZMwWcqkLzDAQugVEwedisr5nRJ1r+7LYnv0U=
